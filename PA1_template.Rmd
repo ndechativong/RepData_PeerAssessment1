@@ -1,25 +1,103 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Course Project 1
+
+##Loading and preprocessing the data
+
+###Code for reading in the dataset and/or processing the data
+```{r readfile, echo=TRUE}
+step1 <- read.table("C:/Users/ndechativong/Documents/R/coursera/data/activity.csv", header = TRUE, sep = ",")
+head(step1)
+```
+
+##What is mean total number of steps taken per day?
+
+###Histogram of the total number of steps taken each day
+```{r hist_stepday, echo=TRUE}
+step1_sum <- aggregate(step1$steps, by=list(date=step1$date), sum, na.rm = TRUE)
+hist(step1_sum$x, main = "Histogram of the total number of steps taken each day", xlab = "Number of steps")
+```
+
+###Mean and median number of steps taken each day
+```{r mean_median_stepday, echo=TRUE}
+step1_mean <- mean(step1_sum$x, na.rm = TRUE)
+step1_mean
+
+step1_median <- median(step1_sum$x, na.rm = TRUE)
+step1_median
+```
+
+##What is the average daily activity pattern?
+
+###Time series plot of the average number of steps taken
+```{r timeplot_avg, echo=TRUE}
+library("lattice")
+step1_int_avg <- aggregate(step1$steps, by=list(interval=step1$interval), mean, na.rm = TRUE)
+xyplot(step1_int_avg$x ~ step1_int_avg$interval, type = "l", xlab = "5-minute interval", ylab = "Average number of steps")
+```
 
 
-## Loading and preprocessing the data
+###The 5-minute interval that, on average, contains the maximum number of steps
+```{r max_interval, echo=TRUE}
+apply(step1_int_avg, MARGIN = 2, function(x) max(x, na.rm = TRUE))
+```
+
+##Imputing missing values
+
+###Calculate and report the total number of missing values in the dataset
+```{r sum_missinputs, echo=TRUE}
+sum(is.na(step1$steps))
+```
+
+###Code to describe and show a strategy for inputing missing data
+```{r input_miss, echo=TRUE}
+# Average steps per day
+step1_day_avg <- aggregate(step1$steps, by=list(date=step1$date), mean, na.rm = TRUE)
+
+# Number of missing inputs per day
+aggregate(is.na(step1$steps), by=list(date=step1$date), sum, na.rm = FALSE)
+
+# Create new data frame to capture made-up input values
+step2 <- step1
+
+for (n in 1:nrow(step1)) {
+    s <- step1[n, ]
+    
+    if (is.na(s$steps))
+        steps <- subset(step1_int_avg, interval == s$interval)$x
+    else
+        steps <- s$steps
+
+    step2[n, 1] <- round(steps)
+}
+```
+
+###Histogram of the total number of steps taken each day after missing values are inputed
+```{r hist_summiss, echo=TRUE}
+step2_sum <- aggregate(step2$steps, by=list(date=step2$date), sum, na.rm = TRUE)
+hist(step2_sum$x, main = "Histogram of the total number of steps taken each day", xlab = "Number of steps")
+```
+
+###Mean and median number of steps taken each day after missing values are inputed
+```{r mean_miss, echo=TRUE}
+step2_mean <- mean(step2_sum$x, na.rm = TRUE)
+step2_mean
+
+step2_median <- median(step2_sum$x, na.rm = TRUE)
+step2_median
+```
+
+##Are there differences in activity patterns between weekdays and weekends?
+
+
+###Panel plot comparing the average number of steps taken per 5-minute interval across weekdays and weekends
+
+```{r plot_avg_week, echo=TRUE}
+step2$weekday <- weekdays(as.Date(step2$date))
+step2$daytype <- ifelse((step2$weekday == "Saturday" | step2$weekday == "Sunday"), "Weekend", "Weekday")
+step2_int_avg <- aggregate(step2$steps, by=list(interval=step2$interval, step2$daytype), mean, na.rm = TRUE)
+names(step2_int_avg) <- c("interval", "daytype", "step")
+
+xyplot(step ~ interval | daytype, step2_int_avg, type = "l", layout = c(1, 2), xlab = "5-minute interval", ylab = "Average number of steps")
+```
 
 
 
-## What is mean total number of steps taken per day?
-
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
