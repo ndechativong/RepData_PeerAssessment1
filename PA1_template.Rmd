@@ -1,3 +1,8 @@
+---
+title: "RepData_PeerAssessment1"
+output: html_document
+---
+
 # Reproducible Research: Course Project 1
 
 ##Loading and preprocessing the data
